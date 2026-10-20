@@ -5,20 +5,29 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 
+#include <array>
+
 class Sprite {  // could derive from sf::Drawable if you're willing to pay for a vptr, but not
                 // necessary.
 public:
-    Sprite(const sf::Texture& texture) {
-        // TODO
-    }
+    Sprite(const sf::Texture& texture) :
+        mTexture(&texture),
+        mVertexArray(sf::PrimitiveType::Triangles, 6),
+        mMinPointTex({0.f, 0.f}),
+        mMaxPointTex(sf::Vector2f(texture.getSize())),
+        mOrigin({0.f, 0.f}) {}
 
-    Sprite(const sf::Texture& texture, const sf::Vector2f& texMinPoint,
-           const sf::Vector2f& texMaxPoint) {
-        // TODO
-    }
+    Sprite(const sf::Texture& texture, const sf::Vector2f& texMinPoint, const sf::Vector2f& texMaxPoint) :
+        mTexture(&texture),
+        mVertexArray(sf::PrimitiveType::Triangles, 6),
+        mMinPointTex(texMinPoint),
+        mMaxPointTex(texMaxPoint),
+        mOrigin({0.f, 0.f}) {}
 
     void draw(sf::RenderTarget& target, sf::RenderStates states) const {
-        // TODO
+        recomputeVertexArray();
+        states.texture = mTexture;
+        target.draw(mVertexArray, states);
     }
 
     sf::Vector2f& position() { return mTransform.translation; }
@@ -34,12 +43,24 @@ private:
     //     ranging from [0, 1] in both dimensions.
     //   - the next 3 correspond to the vertices of the bottom-right triangle. of the default
     //     rectangle.
-    static constexpr std::array<sf::Vector2f, 6> DEFAULT_VERTICES = {};  // TODO
+    static constexpr std::array<sf::Vector2f, 6> DEFAULT_VERTICES = 
+    {{
+        {0.f, 0.f}, {0.f, 1.f}, {1.f, 0.f},   // top-left triangle
+        {0.f, 1.f}, {1.f, 1.f}, {1.f, 0.f},   // bottom-right triangle
+    }};
 
     // if mTexture is valid, recomputes the positions and coords of sf::Vertex for each
     // of 6 possible entries in mVertexArray.
     void recomputeVertexArray() const {
-        // TODO
+        if (!mTexture) return;
+        const sf::Vector2f size = mMaxPointTex - mMinPointTex;
+        for (std::size_t i = 0; i < 6; ++i) {
+            const sf::Vector2f& u = DEFAULT_VERTICES[i];
+            // UV: pick the point inside the texture subrectangle
+            mVertexArray[i].texCoords = mMinPointTex + u * size;
+            // Position: shift so origin is at (0,0), then scale + translate
+            mVertexArray[i].position = mTransform.applyPoint(u * size - mOrigin);
+        }
     }
 
     const sf::Texture* mTexture;

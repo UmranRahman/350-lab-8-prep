@@ -1,0 +1,5 @@
+If the point (1,0) is rotated by 90°, it becomes (cos 90°, sin 90°) = (0,1).
+If the y-axis points down, (0,1) is below the origin, so the point moved 
+from 3 o'clock to 6 o'clock, which is clockwise. If the y-axis points up,
+(0,1) is above the origin, so it moved from 3 o'clock to 12 o'clock,
+which is anti-clockwise.
